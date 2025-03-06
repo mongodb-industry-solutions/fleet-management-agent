@@ -230,7 +230,7 @@ def get_complaint_embedding(state: AgentState) -> AgentState:
         #response = client.embeddings.create(model="text-embedding-ada-002", input=complaint)
         #embedding = response.data[0].embedding
         response = vo_client.embed(complaint,model="voyage-3-large",input_type="query")
-        embedding = response.embeddings
+        embedding = response.embeddings[0]
         state.setdefault("updates", []).append("Complaint embedding generated.")
         print("Voyage AI generated complaint embedding.")
     except Exception as e:
