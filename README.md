@@ -123,6 +123,7 @@ The system receives driver complaints or fleet manager queries, processes vehicl
    ```bash
     npm run dev
 
+
 The frontend should now be accessible at http://localhost:3000.
 
 11. Feel free to adjust the prompt in main.py or update the telemetry data in the telemetry_data.csv file
