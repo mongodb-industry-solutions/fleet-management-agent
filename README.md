@@ -120,7 +120,7 @@ The system receives driver complaints or fleet manager queries, processes vehicl
 
 10. Run the Next.js development server:
 
-   ```bash
+    ```bash
     npm run dev
 
 
