@@ -21,7 +21,7 @@ import InfoWizard from "./components/InfoWizard";
 
 export default function HomePage() {
   const [selectedOption, setSelectedOption] = useState("new"); // "new", "resume", or "list"
-  const [issue, setIssue] = useState("I am hearing knocking sound while turning at low speeds");
+  const [issue, setIssue] = useState("My vehicle’s fuel consumption has increased significantly over the past week. What might be wrong with the engine or fuel system?");
   const [threadId, setThreadId] = useState("");
   const [workflow, setWorkflow] = useState(null);
   const [sessions, setSessions] = useState(null);

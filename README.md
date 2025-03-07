@@ -148,7 +148,7 @@ The Connected Fleet Advisor Demo showcases an AI-driven diagnostic system for ve
 
 **System Architecture:**  
    - **Backend Workflow:**  
-     - The agent receives a user’s issue report (e.g., "I am hearing a knocking sound while turning at low speeds").
+     - The agent receives a user’s issue report (e.g., "My vehicle’s fuel consumption has increased significantly over the past week. What might be wrong with the engine or fuel system?").
      - It first retrieves telemetry data (simulated here via a CSV file) and logs the update.
      - Next, it generates an embedding for the complaint using Voyage AI voyage-3-large embedding API.
      - The system then performs a vector search against historical issues in MongoDB to find similar cases.
