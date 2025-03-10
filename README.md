@@ -22,6 +22,7 @@ The system receives driver complaints or fleet manager queries, processes vehicl
 
 - **User-Friendly Frontend:**  
   A dashboard displays the agent’s real-time workflow updates (chain-of-thought, final recommendation, update messages) in one column, and the corresponding MongoDB run documents in the other column.
+  
 
 ## Repository Structure
 
@@ -54,6 +55,9 @@ The system receives driver complaints or fleet manager queries, processes vehicl
 ---public 
 
 ---package.json # Frontend configuration
+
+
+<img width="1191" alt="image" src="https://github.com/user-attachments/assets/ce2ad3cc-c714-49c8-811d-b7856828172e" />
 
 
 ## Setup Instructions
