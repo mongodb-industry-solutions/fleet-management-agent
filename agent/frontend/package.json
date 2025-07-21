@@ -13,16 +13,19 @@
     "@leafygreen-ui/button": "^23.0.0",
     "@leafygreen-ui/card": "^12.0.2",
     "@leafygreen-ui/code": "^16.0.5",
-    "@leafygreen-ui/leafygreen-provider": "^4.0.2",
-    "@leafygreen-ui/typography": "^20.1.1",
     "@leafygreen-ui/icon": "^13.1.2",
     "@leafygreen-ui/icon-button": "^16.0.2",
+    "@leafygreen-ui/leafygreen-provider": "^4.0.2",
     "@leafygreen-ui/modal": "^17.0.2",
     "@leafygreen-ui/tabs": "^14.0.2",
     "@leafygreen-ui/tooltip": "^13.0.2",
+    "@leafygreen-ui/typography": "^20.1.1",
     "next": "15.2.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-markdown": "^10.0.1"
+  },
+  "devDependencies": {
+    "license-checker": "^25.0.1"
   }
 }
