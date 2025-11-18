@@ -136,7 +136,7 @@ The frontend should now be accessible at http://localhost:3000.
 
 ### Overview
 
-The Connected Fleet Advisor Demo showcases an AI-driven diagnostic system for vehicles. The demo integrates several key technologies:
+The Connected Fleet Advisor Demo showcases an generative AI-driven diagnostic system for vehicles. The demo integrates several key technologies:
   
 - **Backend:**  
   Implements a multi-step diagnostic workflow using LangGraph. The backend reads telemetry data from a CSV file (simulating vehicle sensor inputs), generates text embeddings using Voyage AI, performs vector searches to identify similar past issues from MongoDB, persists session and run data, and finally generates a diagnostic recommendation.
