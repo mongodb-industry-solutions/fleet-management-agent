@@ -20,7 +20,7 @@
     "@leafygreen-ui/tabs": "^14.0.2",
     "@leafygreen-ui/tooltip": "^13.0.2",
     "@leafygreen-ui/typography": "^20.1.1",
-    "next": "15.4.10",
+    "next": "16.1.5",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-markdown": "^10.0.1"
