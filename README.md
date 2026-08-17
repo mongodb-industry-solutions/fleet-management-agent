@@ -10,7 +10,7 @@ The system receives driver complaints or fleet manager queries, processes vehicl
   The agent processes an issue report by:
   1. **Reading Telemetry Data:** Ingests vehicle sensor data from a CSV file (In a production setup, this will be replaced by an API).
   2. **Generating an Embedding:** Uses Voyage AI embedding API to convert the complaint text into a numerical representation.
-  3. **Atlas Vector Search:** Searches for similar issues in MongoDB Atlas using the generated embedding.
+  3. **MongoDB Vector Search:** Searches for similar issues in MongoDB Atlas using the generated embedding.
   4. **Data Persistence:** Saves telemetry data, session logs, and recommendations in MongoDB Atlas.
   5. **Final Recommendation:** Uses OpenAI chat API to produce actionable diagnostic advice.
   
@@ -23,6 +23,30 @@ The system receives driver complaints or fleet manager queries, processes vehicl
 - **User-Friendly Frontend:**  
   A dashboard displays the agent’s real-time workflow updates (chain-of-thought, final recommendation, update messages) in one column, and the corresponding MongoDB run documents in the other column.
   
+
+## Why MongoDB?
+
+- **Vector Search for RAG over past issues.** `past_issues` documents (issue text +
+  Voyage AI embedding) are queried with `$vectorSearch` in
+  [`vector_search_tool()`](agent/backend/main.py) to ground the LLM's recommendation in
+  similar historical cases, instead of relying on the model's own guesses. See
+  [MongoDB Vector Search](https://www.mongodb.com/docs/atlas/atlas-vector-search/vector-search-overview/?utm_campaign=devrel&utm_source=github&utm_medium=referral&utm_content=fleet_management_agent&utm_term=learning.fuel).
+- **A time series collection for telemetry.** `telemetry_data` is created with
+  `timeseries={"timeField": "timestamp", "granularity": "minutes"}`, matching the
+  actual shape of vehicle sensor readings rather than storing them in a general-purpose
+  collection. See
+  [Time Series Collections](https://www.mongodb.com/docs/manual/core/timeseries-collections/?utm_campaign=devrel&utm_source=github&utm_medium=referral&utm_content=fleet_management_agent&utm_term=learning.fuel).
+- **One flexible document model for every stage of the run.** Agent profiles, session
+  metadata, telemetry snapshots, vector search results, and the final recommendation
+  all have different shapes, but they're all just documents — no schema migration
+  needed to add a new field to any of them.
+- **LangGraph checkpointing on the same cluster.** `MongoDBSaver` persists the graph's
+  state to `checkpointing_db`, so a run can be resumed or inspected without a separate
+  state store. See
+  [LangGraph MongoDB Checkpointer](https://github.com/langchain-ai/langgraph/tree/main/libs/checkpoint-mongodb).
+
+Don't have a cluster yet?
+[Sign up for free and deploy an M0 cluster](https://www.mongodb.com/cloud/atlas/register?utm_campaign=devrel&utm_source=github&utm_medium=referral&utm_content=fleet_management_agent&utm_term=learning.fuel).
 
 ## Repository Structure
 
@@ -65,8 +89,8 @@ The system receives driver complaints or fleet manager queries, processes vehicl
 ### Prerequisites
 
 - **Python 3.11+** (backend)
-- **Node.js** (for the Next.js frontend)
-- **MongoDB Atlas connection URI** 
+- **Node.js 20.9+** (for the Next.js 16 frontend)
+- **A MongoDB Atlas connection URI** — see [Why MongoDB?](#why-mongodb) for a free M0 signup link
 - **OpenAI API Key**
 - **Voyage AI API Key**
 
@@ -75,18 +99,20 @@ The system receives driver complaints or fleet manager queries, processes vehicl
 1. **Clone the repository** and navigate to the backend directory:
    ```bash
    cd agent/backend
+   ```
 
 2. Create and activate a virtual environment:
 
    ```bash
     python -m venv venv
     source venv/bin/activate   # On Windows: venv\Scripts\activate
-    
+   ```
+
 3. Install dependencies:
 
    ```bash
     pip install -r requirements.txt
-
+   ```
 
 4. Configure environment variables:
     
@@ -97,17 +123,32 @@ The system receives driver complaints or fleet manager queries, processes vehicl
     VOYAGE_API_KEY=your_voyage_api_key_here
     MONGO_URI=your_mongo_uri_here
     DATABASE=fleet_issues
+    APP_NAME=devrel-demo-langgraph-voyageai-fleet
     TELEMETRY_PATH=data/telemetry_data.csv
     VECTOR_SEARCH_INDEX=issues_index
+   ```
 
-5. Run `create_issue_embeddings.py` to create and store embeddings in MongoDB.
+   `APP_NAME` is passed as every MongoDB client's `appName`, for Atlas attribution — it's optional; the value above is the default if unset.
 
-6. Create a Atlas Vector Search index with name `issues_index` and path `embeddings`. 
+5. Run `create_issue_embeddings.py` to embed the sample issues (via Voyage AI `voyage-3-large`, 1024 dimensions) and store them in the `past_issues` collection. Safe to run again — it skips seeding if `past_issues` already has documents.
+
+   ```bash
+    python create_issue_embeddings.py
+   ```
+
+6. Create the MongoDB Vector Search index (must run after step 5, since the collection has to exist first):
+
+   ```bash
+    python create_vector_index.py
+   ```
+
+   This creates a modern `vectorSearch`-type index named `issues_index` on `past_issues.embedding` (1024 dimensions, cosine similarity) — not the older Search-index-with-a-knnVector-field-mapping style. Safe to run again — it skips creation if an index with that name already exists. Prefer the Atlas UI instead? Use the same field definition: type `vector`, path `embedding`, 1024 dimensions, cosine similarity.
 
 7. Run the backend server:
 
    ```bash
     uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+   ```
 
 8. Frontend Setup
 
@@ -115,18 +156,19 @@ The system receives driver complaints or fleet manager queries, processes vehicl
 
    ```bash
     cd ../frontend
+   ```
 
 9. Install dependencies:
 
    ```bash
     npm install
-    
+   ```
 
 10. Run the Next.js development server:
 
     ```bash
     npm run dev
-
+    ```
 
 The frontend should now be accessible at http://localhost:3000.
 
