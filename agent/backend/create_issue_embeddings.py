@@ -26,6 +26,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 fleet_issues = os.environ.get("DATABASE")
+app_name = os.environ.get("APP_NAME", "devrel-demo-langgraph-voyageai-fleet")
 vo_client = voyageai.Client()
 
 
@@ -67,7 +68,7 @@ def main():
         return
 
     # Connect to MongoDB
-    client = pymongo.MongoClient(mongo_uri)
+    client = pymongo.MongoClient(mongo_uri, appname=app_name)
     db = client[fleet_issues]
     collection = db["past_issues"]
 

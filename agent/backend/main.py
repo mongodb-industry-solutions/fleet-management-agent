@@ -22,6 +22,7 @@ import csv
 import io
 import os
 import datetime
+from contextlib import contextmanager
 from typing import Any, List, Literal, Optional
 from typing_extensions import TypedDict
 from bson import ObjectId
@@ -45,6 +46,7 @@ vo_client = voyageai.Client()
 fleet_issues = os.environ.get("DATABASE")
 telemetry_path = os.environ.get("TELEMETRY_PATH")
 vector_search_index = os.environ.get("VECTOR_SEARCH_INDEX")
+app_name = os.environ.get("APP_NAME", "devrel-demo-langgraph-voyageai-fleet")
 
 # --- Define State Types ---
 class TelemetryRecord(TypedDict):
@@ -95,7 +97,7 @@ def get_agent_profile(agent_id: str) -> dict:
     if not mongo_uri:
         return default_profile
     try:
-        client_mongo = pymongo.MongoClient(mongo_uri)
+        client_mongo = pymongo.MongoClient(mongo_uri, appname=app_name)
         db = client_mongo[fleet_issues]
         collection = db["agent_profiles"]
         profile = collection.find_one({"agent_id": agent_id})
@@ -139,7 +141,7 @@ def vector_search_tool(state: dict) -> dict:
         ]
     else:
         try:
-            client_mongo = pymongo.MongoClient(mongo_uri)
+            client_mongo = pymongo.MongoClient(mongo_uri, appname=app_name)
             db = client_mongo[fleet_issues]
             collection = db["past_issues"]
             pipeline = [
@@ -259,7 +261,7 @@ def persist_data_to_mongodb(state: AgentState) -> AgentState:
         "thread_id": state.get("thread_id", "")
     }
     try:
-        client_mongo = pymongo.MongoClient(mongo_uri)
+        client_mongo = pymongo.MongoClient(mongo_uri, appname=app_name)
         db = client_mongo[fleet_issues]
         if "telemetry_data" not in db.list_collection_names():
             print("[MongoDB] Creating time series collection 'telemetry_data'.")
@@ -342,7 +344,7 @@ Similar Past Issues: {similar_issues}
     mongo_uri = os.environ.get("MONGO_URI")
     if mongo_uri:
         try:
-            client_mongo = pymongo.MongoClient(mongo_uri)
+            client_mongo = pymongo.MongoClient(mongo_uri, appname=app_name)
             db = client_mongo[fleet_issues]
             recommendations_collection = db["historical_recommendations"]
             recommendation_record = {
@@ -373,13 +375,25 @@ def route_by_telemetry_severity(state: AgentState) -> str:
     return "embedding_node"
 
 # --- Create MongoDB Saver ---
+@contextmanager
+def _mongodb_saver_from_conn_string(mongo_uri: str):
+    """Equivalent to MongoDBSaver.from_conn_string(mongo_uri), except the
+    MongoClient it builds carries appname -- from_conn_string's **kwargs are
+    forwarded to MongoDBSaver.__init__, not to the MongoClient it constructs
+    internally, so there's no way to set appname through it directly."""
+    client_mongo = pymongo.MongoClient(mongo_uri, appname=app_name)
+    try:
+        yield MongoDBSaver(client_mongo)
+    finally:
+        client_mongo.close()
+
 def create_mongodb_saver():
     mongo_uri = os.environ.get("MONGO_URI")
     if not mongo_uri:
         print("[MongoDB] MONGO_URI not set. State saving will be disabled.")
         return None
     try:
-        return MongoDBSaver.from_conn_string(mongo_uri)
+        return _mongodb_saver_from_conn_string(mongo_uri)
     except Exception as e:
         print(f"[MongoDB] Error initializing MongoDB saver: {e}")
         return None
@@ -390,7 +404,7 @@ def list_available_sessions():
         print("[MongoDB] MONGO_URI not set. Cannot retrieve sessions.")
         return False
     try:
-        client_mongo = pymongo.MongoClient(mongo_uri)
+        client_mongo = pymongo.MongoClient(mongo_uri, appname=app_name)
         db = client_mongo[fleet_issues]
         sessions_collection = db["agent_sessions"]
         recent_sessions = list(sessions_collection.find().sort("created_at", -1).limit(10))
@@ -510,7 +524,7 @@ async def run_agent(issue_report: str = Query("My vehicle’s fuel consumption h
         mongo_uri = os.environ.get("MONGO_URI")
         if mongo_uri:
             try:
-                client_mongo = pymongo.MongoClient(mongo_uri)
+                client_mongo = pymongo.MongoClient(mongo_uri, appname=app_name)
                 db = client_mongo[fleet_issues]
                 sessions_collection = db["agent_sessions"]
                 session_metadata = {
@@ -533,7 +547,7 @@ async def run_agent(issue_report: str = Query("My vehicle’s fuel consumption h
         mongo_uri = os.environ.get("MONGO_URI")
         if mongo_uri:
             try:
-                client_mongo = pymongo.MongoClient(mongo_uri)
+                client_mongo = pymongo.MongoClient(mongo_uri, appname=app_name)
                 db = client_mongo[fleet_issues]
                 sessions_collection = db["agent_sessions"]
                 session_metadata = {
@@ -557,7 +571,7 @@ async def resume_agent(thread_id: str = Query(..., description="Thread ID to res
     if not mongo_uri:
         raise HTTPException(status_code=500, detail="MONGO_URI not set")
     try:
-        client_mongo = pymongo.MongoClient(mongo_uri)
+        client_mongo = pymongo.MongoClient(mongo_uri, appname=app_name)
         db = client_mongo[fleet_issues]
         sessions_collection = db["agent_sessions"]
         session = sessions_collection.find_one({"thread_id": thread_id})
@@ -576,7 +590,7 @@ async def get_sessions():
     if not mongo_uri:
         raise HTTPException(status_code=500, detail="MONGO_URI not set")
     try:
-        client_mongo = pymongo.MongoClient(mongo_uri)
+        client_mongo = pymongo.MongoClient(mongo_uri, appname=app_name)
         db = client_mongo[fleet_issues]
         sessions_collection = db["agent_sessions"]
         sessions = list(sessions_collection.find().sort("created_at", -1).limit(10))
@@ -592,7 +606,7 @@ async def get_run_documents(thread_id: str = Query(..., description="Thread ID o
     if not mongo_uri:
         raise HTTPException(status_code=500, detail="MONGO_URI not set")
     try:
-        client_mongo = pymongo.MongoClient(mongo_uri)
+        client_mongo = pymongo.MongoClient(mongo_uri, appname=app_name)
         db = client_mongo[fleet_issues]
         docs = {}
 
@@ -626,7 +640,7 @@ async def get_run_documents(thread_id: str = Query(..., description="Thread ID o
         client_mongo.close()
 
         # Connect to "checkpointing_db" and get the last document from the "checkpoints" collection
-        client_checkpoint = pymongo.MongoClient(mongo_uri)
+        client_checkpoint = pymongo.MongoClient(mongo_uri, appname=app_name)
         checkpoint_db = client_checkpoint["checkpointing_db"]
         checkpoint_collection = checkpoint_db["checkpoints"]
         last_checkpoint = checkpoint_collection.find_one(sort=[("created_at", -1)])

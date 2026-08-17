@@ -82,7 +82,7 @@ The system receives driver complaints or fleet manager queries, processes vehicl
    ```bash
     python -m venv venv
     source venv/bin/activate   # On Windows: venv\Scripts\activate
-    ```
+   ```
 
 3. Install dependencies:
 
@@ -99,9 +99,12 @@ The system receives driver complaints or fleet manager queries, processes vehicl
     VOYAGE_API_KEY=your_voyage_api_key_here
     MONGO_URI=your_mongo_uri_here
     DATABASE=fleet_issues
+    APP_NAME=devrel-demo-langgraph-voyageai-fleet
     TELEMETRY_PATH=data/telemetry_data.csv
     VECTOR_SEARCH_INDEX=issues_index
    ```
+
+   `APP_NAME` is passed as every MongoDB client's `appName`, for Atlas attribution — it's optional; the value above is the default if unset.
 
 5. Run `create_issue_embeddings.py` to embed the sample issues (via Voyage AI `voyage-3-large`, 1024 dimensions) and store them in the `past_issues` collection. Safe to run again — it skips seeding if `past_issues` already has documents.
 

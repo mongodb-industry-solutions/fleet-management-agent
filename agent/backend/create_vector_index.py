@@ -38,7 +38,8 @@ def main():
     if not mongo_uri or not database or not index_name:
         raise SystemExit("MONGO_URI, DATABASE, and VECTOR_SEARCH_INDEX must be set (see .env)")
 
-    client = pymongo.MongoClient(mongo_uri)
+    app_name = os.environ.get("APP_NAME", "devrel-demo-langgraph-voyageai-fleet")
+    client = pymongo.MongoClient(mongo_uri, appname=app_name)
     collection = client[database]["past_issues"]
 
     existing = {idx["name"] for idx in collection.list_search_indexes()}
