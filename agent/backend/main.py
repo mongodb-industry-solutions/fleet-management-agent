@@ -125,7 +125,7 @@ def get_telemetry_tool(state: dict) -> dict:
 
 def vector_search_tool(state: dict) -> dict:
     """Performs a vector search on past issues in MongoDB Atlas."""
-    message = "[Tool] Performing MongoDB Atlas Vector Search"
+    message = "[Tool] Performing MongoDB Vector Search"
     print("\n" + message)
     state.setdefault("updates", []).append(message)
     embedding = state.get("embedding_vector", [])

@@ -10,7 +10,7 @@ The system receives driver complaints or fleet manager queries, processes vehicl
   The agent processes an issue report by:
   1. **Reading Telemetry Data:** Ingests vehicle sensor data from a CSV file (In a production setup, this will be replaced by an API).
   2. **Generating an Embedding:** Uses Voyage AI embedding API to convert the complaint text into a numerical representation.
-  3. **Atlas Vector Search:** Searches for similar issues in MongoDB Atlas using the generated embedding.
+  3. **MongoDB Vector Search:** Searches for similar issues in MongoDB Atlas using the generated embedding.
   4. **Data Persistence:** Saves telemetry data, session logs, and recommendations in MongoDB Atlas.
   5. **Final Recommendation:** Uses OpenAI chat API to produce actionable diagnostic advice.
   
@@ -106,7 +106,7 @@ The system receives driver complaints or fleet manager queries, processes vehicl
     python create_issue_embeddings.py
    ```
 
-6. Create the Atlas Vector Search index (must run after step 5, since the collection has to exist first):
+6. Create the MongoDB Vector Search index (must run after step 5, since the collection has to exist first):
 
    ```bash
     python create_vector_index.py

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Creates the Atlas Vector Search index on the past_issues collection, using the
+Creates the MongoDB Vector Search index on the past_issues collection, using the
 current vectorSearch index type (not the older Search index with a knnVector
 field mapping). Run this once, after create_issue_embeddings.py has inserted
 at least one document with an `embedding` field -- creating a vector index on
