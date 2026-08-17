@@ -100,9 +100,19 @@ The system receives driver complaints or fleet manager queries, processes vehicl
     TELEMETRY_PATH=data/telemetry_data.csv
     VECTOR_SEARCH_INDEX=issues_index
 
-5. Run `create_issue_embeddings.py` to create and store embeddings in MongoDB.
+5. Run `create_issue_embeddings.py` to embed the sample issues (via Voyage AI `voyage-3-large`, 1024 dimensions) and store them in the `past_issues` collection. Safe to run again — it skips seeding if `past_issues` already has documents.
 
-6. Create a Atlas Vector Search index with name `issues_index` and path `embeddings`. 
+   ```bash
+    python create_issue_embeddings.py
+   ```
+
+6. Create the Atlas Vector Search index (must run after step 5, since the collection has to exist first):
+
+   ```bash
+    python create_vector_index.py
+   ```
+
+   This creates a modern `vectorSearch`-type index named `issues_index` on `past_issues.embedding` (1024 dimensions, cosine similarity) — not the older Search-index-with-a-knnVector-field-mapping style. Safe to run again — it skips creation if an index with that name already exists. Prefer the Atlas UI instead? Use the same field definition: type `vector`, path `embedding`, 1024 dimensions, cosine similarity.
 
 7. Run the backend server:
 
