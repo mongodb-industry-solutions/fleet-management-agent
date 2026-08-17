@@ -279,7 +279,7 @@ def persist_data_to_mongodb(state: AgentState) -> AgentState:
             "thread_id": state.get("thread_id", ""),
             "issue_report": combined_data["issue_report"],
             "similar_issues": combined_data["similar_issues"],
-            "created_at": datetime.datetime.utcnow()
+            "created_at": datetime.datetime.now(datetime.UTC)
         }
         log_entry = convert_objectids(log_entry)
         logs_collection.insert_one(log_entry)
@@ -347,7 +347,7 @@ Similar Past Issues: {similar_issues}
             recommendations_collection = db["historical_recommendations"]
             recommendation_record = {
                 "thread_id": state.get("thread_id", ""),
-                "timestamp": datetime.datetime.utcnow(),
+                "timestamp": datetime.datetime.now(datetime.UTC),
                 "issue_report": state["issue_report"],
                 "telemetry_data": state["telemetry_data"],
                 "similar_issues": state["similar_issues_list"],
@@ -516,7 +516,7 @@ async def run_agent(issue_report: str = Query("My vehicle’s fuel consumption h
                 session_metadata = {
                     "thread_id": thread_id,
                     "issue_report": issue_report,
-                    "created_at": datetime.datetime.utcnow(),
+                    "created_at": datetime.datetime.now(datetime.UTC),
                     "status": "completed",
                     "recommendation": final_state["recommendation_text"]
                 }
@@ -539,7 +539,7 @@ async def run_agent(issue_report: str = Query("My vehicle’s fuel consumption h
                 session_metadata = {
                     "thread_id": thread_id,
                     "issue_report": issue_report,
-                    "created_at": datetime.datetime.utcnow(),
+                    "created_at": datetime.datetime.now(datetime.UTC),
                     "status": "error",
                     "error_message": str(e)
                 }
