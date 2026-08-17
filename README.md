@@ -75,18 +75,20 @@ The system receives driver complaints or fleet manager queries, processes vehicl
 1. **Clone the repository** and navigate to the backend directory:
    ```bash
    cd agent/backend
+   ```
 
 2. Create and activate a virtual environment:
 
    ```bash
     python -m venv venv
     source venv/bin/activate   # On Windows: venv\Scripts\activate
-    
+    ```
+
 3. Install dependencies:
 
    ```bash
     pip install -r requirements.txt
-
+   ```
 
 4. Configure environment variables:
     
@@ -99,6 +101,7 @@ The system receives driver complaints or fleet manager queries, processes vehicl
     DATABASE=fleet_issues
     TELEMETRY_PATH=data/telemetry_data.csv
     VECTOR_SEARCH_INDEX=issues_index
+   ```
 
 5. Run `create_issue_embeddings.py` to embed the sample issues (via Voyage AI `voyage-3-large`, 1024 dimensions) and store them in the `past_issues` collection. Safe to run again — it skips seeding if `past_issues` already has documents.
 
@@ -118,6 +121,7 @@ The system receives driver complaints or fleet manager queries, processes vehicl
 
    ```bash
     uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+   ```
 
 8. Frontend Setup
 
@@ -125,18 +129,19 @@ The system receives driver complaints or fleet manager queries, processes vehicl
 
    ```bash
     cd ../frontend
+   ```
 
 9. Install dependencies:
 
    ```bash
     npm install
-    
+   ```
 
 10. Run the Next.js development server:
 
     ```bash
     npm run dev
-
+    ```
 
 The frontend should now be accessible at http://localhost:3000.
 
