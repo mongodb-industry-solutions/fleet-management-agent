@@ -24,6 +24,30 @@ The system receives driver complaints or fleet manager queries, processes vehicl
   A dashboard displays the agent’s real-time workflow updates (chain-of-thought, final recommendation, update messages) in one column, and the corresponding MongoDB run documents in the other column.
   
 
+## Why MongoDB?
+
+- **Vector Search for RAG over past issues.** `past_issues` documents (issue text +
+  Voyage AI embedding) are queried with `$vectorSearch` in
+  [`vector_search_tool()`](agent/backend/main.py) to ground the LLM's recommendation in
+  similar historical cases, instead of relying on the model's own guesses. See
+  [MongoDB Vector Search](https://www.mongodb.com/docs/atlas/atlas-vector-search/vector-search-overview/?utm_campaign=devrel&utm_source=github&utm_medium=referral&utm_content=fleet_management_agent&utm_term=learning.fuel).
+- **A time series collection for telemetry.** `telemetry_data` is created with
+  `timeseries={"timeField": "timestamp", "granularity": "minutes"}`, matching the
+  actual shape of vehicle sensor readings rather than storing them in a general-purpose
+  collection. See
+  [Time Series Collections](https://www.mongodb.com/docs/manual/core/timeseries-collections/?utm_campaign=devrel&utm_source=github&utm_medium=referral&utm_content=fleet_management_agent&utm_term=learning.fuel).
+- **One flexible document model for every stage of the run.** Agent profiles, session
+  metadata, telemetry snapshots, vector search results, and the final recommendation
+  all have different shapes, but they're all just documents — no schema migration
+  needed to add a new field to any of them.
+- **LangGraph checkpointing on the same cluster.** `MongoDBSaver` persists the graph's
+  state to `checkpointing_db`, so a run can be resumed or inspected without a separate
+  state store. See
+  [LangGraph MongoDB Checkpointer](https://github.com/langchain-ai/langgraph/tree/main/libs/checkpoint-mongodb).
+
+Don't have a cluster yet?
+[Sign up for free and deploy an M0 cluster](https://www.mongodb.com/cloud/atlas/register?utm_campaign=devrel&utm_source=github&utm_medium=referral&utm_content=fleet_management_agent&utm_term=learning.fuel).
+
 ## Repository Structure
 
 /agent 
@@ -65,8 +89,8 @@ The system receives driver complaints or fleet manager queries, processes vehicl
 ### Prerequisites
 
 - **Python 3.11+** (backend)
-- **Node.js** (for the Next.js frontend)
-- **MongoDB Atlas connection URI** 
+- **Node.js 20.9+** (for the Next.js 16 frontend)
+- **A MongoDB Atlas connection URI** — see [Why MongoDB?](#why-mongodb) for a free M0 signup link
 - **OpenAI API Key**
 - **Voyage AI API Key**
 
